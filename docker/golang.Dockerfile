@@ -5,8 +5,7 @@ FROM golang:1.24-alpine3.20 AS builder
 RUN apk update && apk add --no-cache gcc musl-dev gcompat git build-base
 WORKDIR /whatsapp
 COPY . .
-WORKDIR /whatsapp/src
-RUN go mod download
+RUN go mod download --proto=https
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o /app/whatsapp
 
 #############################
