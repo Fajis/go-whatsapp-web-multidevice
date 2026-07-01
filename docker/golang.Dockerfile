@@ -1,20 +1,24 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM golang:1.24-alpine3.21 AS builder
-RUN apk update && apk add --no-cache gcc musl-dev gcompat git build-base
+FROM golang:1.24-alpine3.20 AS builder
+RUN apk update && apk add --no-cache gcc musl-dev gcompat
 WORKDIR /whatsapp
-COPY . .
+COPY ./src .
+
+# Fetch dependencies.
 RUN go mod download
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s -extldflags '-static'" -o /app/whatsapp
+# Build the binary with optimizations
+RUN go build -a -ldflags="-w -s" -o /app/whatsapp
 
 #############################
 ## STEP 2 build a smaller image
 #############################
-FROM alpine:3.21
+FROM alpine:3.20
 RUN apk add --no-cache ffmpeg libwebp-tools tzdata
 ENV TZ=UTC
 WORKDIR /app
+# Copy compiled from builder.
 COPY --from=builder /app/whatsapp /app/whatsapp
+# Run the binary.
 ENTRYPOINT ["/app/whatsapp"]
-CMD [ "rest" ]
